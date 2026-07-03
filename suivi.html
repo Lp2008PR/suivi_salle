@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Musculation</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f5f7;
+    margin: 0;
+    padding: 16px;
+    color: #1d1d1f;
+  }
+  h1 {
+    font-size: 26px;
+    text-align: center;
+    margin: 8px 0 24px;
+  }
+  .home {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 380px;
+    margin: 40px auto;
+  }
+  .home button {
+    padding: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+  }
+  .home button:active { background: #eef4ff; }
+  .home button.push { color: #d0021b; }
+  .home button.pull { color: #17c118; }
+  .home button.legs { color: #0071e3; }
+  .home button.pr { color: #F2CF05; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 100%;
+    margin-bottom: 10px;
+  }
+  .back {
+    background: none;
+    border: none;
+    color: #0071e3;
+    font-size: 16px;
+    padding: 6px 0;
+    cursor: pointer;
+  }
+  .status {
+    font-size: 12px;
+    color: #86868b;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: white;
+    width: fit-content;
+    max-width: 100%;
+  }
+  table {
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th, td {
+    border: 1px solid #e5e5e7;
+    padding: 2px;
+    text-align: center;
+  }
+  .section-title {
+    background: #1d1d1f;
+    color: white;
+    font-weight: 600;
+    text-align: left !important;
+    padding: 8px 10px !important;
+    font-size: 13px;
+  }
+  .subsection {
+    background: #d2d2d7;
+    font-weight: 600;
+    text-align: left !important;
+    padding: 6px 10px !important;
+  }
+  .note {
+    background: #f0f0f2;
+    font-style: italic;
+    color: #555;
+    text-align: left !important;
+    padding: 6px 10px !important;
+  }
+  .top-note {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1d1d1f;
+    margin: 4px 0;
+  }
+  .exo-name {
+    text-align: left !important;
+    padding: 6px 8px !important;
+    min-width: 130px;
+    max-width: 140px;
+    font-weight: 500;
+    background: #fafafa;
+  }
+  .exo-reps {
+    display: block;
+    font-size: 10px;
+    color: #86868b;
+    font-weight: 400;
+  }
+  .data-cell {
+    min-width: 42px;
+  }
+  .data-cell input {
+    width: 100%;
+    border: none;
+    text-align: center;
+    font-size: 12px;
+    padding: 3px 0;
+    background: transparent;
+    display: block;
+  }
+  .data-cell input:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .date-header input {
+    width: 58px;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  input:focus { background: #eef4ff; outline: none; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const TITLE_COLORS = { push: '#d0021b', pull: '#17c118', legs: '#0071e3', pr: '#F2CF05' };
+const DEFAULT_COLS = 1;
+
+const WORKOUTS = {
+  push: {
+    title: "Lundi et Vendredi",
+    notes: ["Cardio 10 à 15 minutes", "Échauffement poids et bâton"],
+    sections: [
+      { name: "PECS", exercises: [
+        { name: "Pompes", reps: "3 x 8", sets: 3 },
+        { name: "Bench", reps: "Montée en gamme + 3 x 8", sets: 3 },
+        { name: "Bench incliné", reps: "3 x 8", sets: 3 },
+        { name: "Pec Fly", reps: "3 x 8", sets: 3 },
+        { name: "Chest Press", reps: "3 x 8", sets: 3 },
+      ]},
+      { name: "ÉPAULES", exercises: [
+        { name: "Élévations latérales", reps: "3 x 8", sets: 3 },
+        { name: "Shoulder Press", reps: "3 x 8", sets: 3 },
+        { name: "Pec Fly inversé", reps: "3 x 8", sets: 3 },
+      ]},
+      { name: "TRICEPS", exercises: [
+        { name: "Dips assis", reps: "3 x 8", sets: 3 },
+        { name: "Dips", reps: "3 x 8", sets: 3 },
+        { name: "Extensions Triceps unilatérales", reps: "2 x 8", sets: 2 },
+        { name: "Extensions Triceps double", reps: "3 x 8", sets: 3 },
+      ]},
+    ]
+  },
+  pull: {
+    title: "Mardi et Samedi",
+    notes: ["Cardio 10 à 15 minutes", "Échauffement poids et bâton"],
+    sections: [
+      { name: "DOS", exercises: [
+        { name: "Tractions", reps: "3 x 8", sets: 3 },
+        { name: "Tirage verticale", reps: "3 x 8", sets: 3 },
+        { name: "Tirage horizontale", reps: "3 x 8", sets: 3 },
+        { name: "Seated row", reps: "2 x 8", sets: 2 },
+        { name: "Rowing haltères", reps: "3 x 8", sets: 3 },
+        { name: "Shrug trapèze", reps: "3 x 8", sets: 3 },
+      ]},
+      { name: "BICEPS", exercises: [
+        { name: "Curl pupitre", reps: "3 x 8", sets: 3 },
+        { name: "Curl haltères", reps: "3 x 8", sets: 3 },
+        { name: "Curl unilatéral + marteau", reps: "3 x 8", sets: 3 },
+      ]},
+      { name: "ABDOS", exercises: [
+        { name: "Planche", reps: "", sets: 1, placeholder: "--m--", timeFormat: true },
+        { name: "10 abdos au sol + 10 ramené de jambes", reps: "3 x 8", sets: 3 },
+        { name: "Élévations de jambes", reps: "3 x 8", sets: 3 },
+        { name: "Machines abdos", reps: "3 x 8", sets: 3 },
+        { name: "Machines abdos (chaise)", reps: "3 x 8", sets: 3 },
+      ]},
+    ]
+  },
+  legs: {
+    title: "Mercredi — 1 semaine/2",
+    notes: ["Cardio 10 à 15 minutes"],
+    sections: [
+      { name: "JAMBES", exercises: [
+        { name: "Adducteur", reps: "3 x 8", sets: 3 },
+        { name: "Abducteur", reps: "3 x 8", sets: 3 },
+        { name: "Leg extension", reps: "3 x 8", sets: 3 },
+        { name: "Leg curl", reps: "3 x 8", sets: 3 },
+        { name: "Leg Press", reps: "3 x 8", sets: 3 },
+        { name: "Squat", reps: "Montée en gammes + 3 x 8", sets: 3 },
+        { name: "Hip Thrust", reps: "3 x 8", sets: 3 },
+      ]},
+      { name: "CARDIO", exercises: [
+        { name: "Vélo 5 km", reps: "", sets: 1, placeholder: "--m--", timeFormat: true },
+      ]},
+    ]
+  },
+  pr: {
+    title: "Records personnels",
+    notes: [],
+    sections: [
+      { name: "PECS", exercises: [
+        { name: "Pompes", reps: "", sets: 1 },
+        { name: "Bench", reps: "", sets: 1 },
+        { name: "Bench incliné", reps: "", sets: 1 },
+        { name: "Pec Fly", reps: "", sets: 1 },
+        { name: "Chest Press", reps: "", sets: 1 },
+      ]},
+      { name: "ÉPAULES", exercises: [
+        { name: "Élévations latérales", reps: "", sets: 1 },
+        { name: "Shoulder Press", reps: "", sets: 1 },
+        { name: "Pec Fly inversé", reps: "", sets: 1 },
+      ]},
+      { name: "TRICEPS", exercises: [
+        { name: "Dips assis", reps: "", sets: 1 },
+        { name: "Dips", reps: "", sets: 1 },
+        { name: "Extensions Triceps unilatérales", reps: "", sets: 1 },
+        { name: "Extensions Triceps double", reps: "", sets: 1 },
+      ]},
+      { name: "DOS", exercises: [
+        { name: "Tractions", reps: "", sets: 1 },
+        { name: "Tirage verticale", reps: "", sets: 1 },
+        { name: "Tirage horizontale", reps: "", sets: 1 },
+        { name: "Seated row", reps: "", sets: 1 },
+      ]},
+      { name: "BICEPS", exercises: [
+        { name: "Curl pupitre", reps: "", sets: 1 },
+        { name: "Curl poulie", reps: "", sets: 1 },
+      ]},
+      { name: "ABDOS", exercises: [
+        { name: "Machines abdos (chaise)", reps: "", sets: 1 },
+        { name: "Machines abdos", reps: "", sets: 1 },
+        { name: "Planche", reps: "", sets: 1, placeholder: "--m--", timeFormat: true },
+      ]},
+      { name: "JAMBES", exercises: [
+        { name: "Adducteur", reps: "", sets: 1 },
+        { name: "Abducteur", reps: "", sets: 1 },
+        { name: "Leg extension", reps: "", sets: 1 },
+        { name: "Leg curl", reps: "", sets: 1 },
+        { name: "Leg Press", reps: "", sets: 1 },
+        { name: "Squat à la barre", reps: "", sets: 1 },
+        { name: "Hip Thrust", reps: "", sets: 1 },
+      ]},
+    ]
+  }
+};
+
+const app = document.getElementById('app');
+
+function showHome() {
+  app.innerHTML = `
+    <h1>💪 Suivi Musculation</h1>
+    <div class="home">
+      <button class="push" onclick="showWorkout('push')">🔴 Push</button>
+      <button class="pull" onclick="showWorkout('pull')">🟢 Pull</button>
+      <button class="legs" onclick="showWorkout('legs')">🔵 Legs</button>
+      <button class="pr" onclick="showWorkout('pr')">🟡 PR</button>
+    </div>
+  `;
+}
+
+function storageKey(id) {
+  return 'suivi-muscu-' + id;
+}
+
+function loadData(id) {
+  try {
+    const raw = localStorage.getItem(storageKey(id));
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveData(id, data) {
+  localStorage.setItem(storageKey(id), JSON.stringify(data));
+}
+
+function showWorkout(id) {
+  const workout = WORKOUTS[id];
+  const data = loadData(id);
+  if (!data.numCols) data.numCols = DEFAULT_COLS;
+  if (!data.dates) data.dates = Array(data.numCols).fill('');
+  while (data.dates.length < data.numCols) data.dates.push('');
+  if (!data.cells) data.cells = {};
+
+  let html = `
+    <div class="topbar">
+      <button class="back" onclick="showHome()">← Retour</button>
+      <span class="status" id="status">Prêt</span>
+    </div>
+    <h1 style="color:${TITLE_COLORS[id]};">${workout.title}</h1>
+  `;
+
+  workout.notes.forEach(n => {
+    html += `<p class="top-note">${n}</p>`;
+  });
+
+  html += `<div class="table-wrap" style="border:2px solid ${TITLE_COLORS[id]};"><table><thead><tr>
+    <th class="exo-name">Date :</th>`;
+  for (let c = 0; c < data.numCols; c++) {
+    html += `<th class="date-header"><input type="text" inputmode="numeric" maxlength="8" data-date-col="${c}" value="${data.dates[c] || ''}" placeholder="JJ/MM/AA"></th>`;
+  }
+  html += `</tr></thead><tbody>`;
+
+  workout.sections.forEach((section, sIdx) => {
+    html += `<tr><td class="subsection" style="background:${TITLE_COLORS[id]}; color:white;" colspan="${data.numCols + 1}">${section.name}</td></tr>`;
+    section.exercises.forEach((exo, eIdx) => {
+      const exoId = `${sIdx}-${eIdx}`;
+      html += `<tr><td class="exo-name">${exo.name}${exo.reps ? `<span class="exo-reps">${exo.reps}</span>` : ''}</td>`;
+      for (let c = 0; c < data.numCols; c++) {
+        html += `<td class="data-cell">`;
+        for (let s = 0; s < exo.sets; s++) {
+          const cellKey = `${exoId}-${c}-${s}`;
+          const val = data.cells[cellKey] || '';
+          html += `<input type="text" inputmode="${exo.timeFormat ? 'numeric' : 'decimal'}" ${exo.timeFormat ? 'data-time-format="1"' : ''} data-cell="${cellKey}" value="${val}" placeholder="${exo.placeholder || '-'}">`;
+        }
+        html += `</td>`;
+      }
+      html += `</tr>`;
+    });
+  });
+
+  if (workout.endNote) {
+    html += `<tr><td class="note" colspan="${data.numCols + 1}">${workout.endNote}</td></tr>`;
+  }
+
+  html += `</tbody></table></div>`;
+  html += `<div style="text-align:center; margin-top:14px;">
+    <button onclick="addColumn('${id}')" style="padding:10px 20px; font-size:14px; font-weight:600; border:none; border-radius:10px; background:white; box-shadow:0 1px 4px rgba(0,0,0,0.1); cursor:pointer;">+ Ajouter une colonne</button>
+  </div>`;
+
+  app.innerHTML = html;
+
+  const statusEl = document.getElementById('status');
+  let saveTimeout;
+  function triggerSave() {
+    clearTimeout(saveTimeout);
+    statusEl.textContent = 'Écriture...';
+    saveTimeout = setTimeout(() => {
+      saveData(id, data);
+      statusEl.textContent = 'Sauvegardé ✓';
+    }, 400);
+  }
+
+  app.querySelectorAll('input[data-cell]').forEach(input => {
+    input.addEventListener('input', () => {
+      if (input.dataset.timeFormat) {
+        let digits = input.value.replace(/\D/g, '').slice(0, 4);
+        let formatted = digits;
+        if (digits.length > 2) {
+          formatted = digits.slice(0, 2) + 'm' + digits.slice(2);
+        }
+        input.value = formatted;
+        data.cells[input.dataset.cell] = formatted;
+      } else {
+        data.cells[input.dataset.cell] = input.value;
+      }
+      triggerSave();
+    });
+  });
+  app.querySelectorAll('input[data-date-col]').forEach(input => {
+    input.addEventListener('input', () => {
+      let digits = input.value.replace(/\D/g, '').slice(0, 6);
+      let formatted = digits;
+      if (digits.length > 4) {
+        formatted = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4);
+      } else if (digits.length > 2) {
+        formatted = digits.slice(0, 2) + '/' + digits.slice(2);
+      }
+      input.value = formatted;
+      data.dates[input.dataset.dateCol] = formatted;
+      triggerSave();
+    });
+  });
+}
+
+function addColumn(id) {
+  const data = loadData(id);
+  if (!data.numCols) data.numCols = DEFAULT_COLS;
+  if (!data.dates) data.dates = [];
+  if (!data.cells) data.cells = {};
+  data.numCols += 1;
+  data.dates.push('');
+  saveData(id, data);
+  showWorkout(id);
+}
+
+showHome();
+</script>
+
+</body>
+</html>
