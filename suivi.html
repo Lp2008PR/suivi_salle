@@ -40,6 +40,7 @@
   .home button.pull { color: #17c118; }
   .home button.legs { color: #0071e3; }
   .home button.pr { color: #F2CF05; }
+  .home button.sbd { color: #8B00FF; }
 
   .topbar {
     display: flex;
@@ -149,7 +150,7 @@
 <div id="app"></div>
 
 <script>
-const TITLE_COLORS = { push: '#d0021b', pull: '#17c118', legs: '#0071e3', pr: '#F2CF05' };
+const TITLE_COLORS = { push: '#d0021b', pull: '#17c118', legs: '#0071e3', sbd: '#8B00FF', pr: '#F2CF05' };
 const DEFAULT_COLS = 1;
 
 const WORKOUTS = {
@@ -221,6 +222,17 @@ const WORKOUTS = {
       ]},
     ]
   },
+  sbd: {
+    title: "SBD",
+    notes: [],
+    sections: [
+      { name: "SBD", exercises: [
+        { name: "Squat", reps: "", sets: 1 },
+        { name: "Bench", reps: "", sets: 1 },
+        { name: "Deadlift", reps: "", sets: 1 },
+      ]},
+    ]
+  },
   pr: {
     title: "Records personnels",
     notes: [],
@@ -280,6 +292,7 @@ function showHome() {
       <button class="push" onclick="showWorkout('push')">🔴 Push</button>
       <button class="pull" onclick="showWorkout('pull')">🟢 Pull</button>
       <button class="legs" onclick="showWorkout('legs')">🔵 Legs</button>
+      <button class="sbd" onclick="showWorkout('sbd')">🟣 SBD</button>
       <button class="pr" onclick="showWorkout('pr')">🟡 PR</button>
     </div>
   `;
